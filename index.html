@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Trabajo – CIVITAS V2 → V3 | Civitas</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:       #2355E8;
+  --blue-dark:  #1a3fb5;
+  --blue-light: #eef2fd;
+  --text:       #1a1d2e;
+  --text2:      #374151;
+  --muted:      #64748b;
+  --border:     #e2e8f0;
+  --bg:         #f8faff;
+  --white:      #ffffff;
+  --row-alt:    #f8faff;
+  --col-tarea:  320px;
+  --col-pct:     48px;
+  --col-avance: 128px;
+  --col-week:    33px;
+}
+body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:32px 24px 48px; }
+
+.gantt-card { background:var(--white); border-radius:20px; box-shadow:0 8px 40px rgba(35,85,232,.10),0 1px 4px rgba(35,85,232,.06); overflow:hidden; max-width:1640px; margin:0 auto; }
+
+/* HEADER */
+.gantt-header { background:linear-gradient(130deg,#0f172a 0%,#1a1d2e 40%,#1a3fb5 100%); padding:28px 32px 24px; position:relative; overflow:hidden; }
+.gantt-header::before { content:''; position:absolute; top:-40px; right:-40px; width:220px; height:220px; background:radial-gradient(circle,rgba(35,85,232,.35) 0%,transparent 70%); border-radius:50%; }
+.gantt-title { font-size:18px; font-weight:700; color:#fff; line-height:1.3; max-width:580px; }
+.gantt-subtitle { font-size:12px; color:rgba(255,255,255,.65); margin-top:4px; }
+.gantt-badge-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:20px; }
+.gantt-badge { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); border-radius:20px; padding:4px 14px; font-size:11px; font-weight:600; color:rgba(255,255,255,.90); display:flex; align-items:center; gap:5px; }
+.gantt-badge .dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+
+/* LEGEND */
+.gantt-legend { display:flex; align-items:center; gap:20px; padding:13px 32px; border-bottom:1px solid var(--border); background:var(--bg); flex-wrap:wrap; }
+.gantt-legend-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text2); font-weight:500; }
+.legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+/* SCROLL */
+.gantt-scroll { overflow-x:auto; }
+table.gantt-table { border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; }
+
+/* STICKY COLS */
+.gantt-table .s-tarea  { position:sticky; left:0; z-index:3; min-width:var(--col-tarea); border-right:1px solid var(--border); }
+.gantt-table .s-pct    { position:sticky; left:var(--col-tarea); z-index:3; width:var(--col-pct); min-width:var(--col-pct); border-right:1px solid var(--border); text-align:center; }
+.gantt-table .s-avance { position:sticky; left:calc(var(--col-tarea) + var(--col-pct)); z-index:3; width:var(--col-avance); min-width:var(--col-avance); border-right:2px solid #94a3b8; }
+
+/* MONTH ROW — sticky cells invisible seam */
+tr.month-row th { background:#1a1d2e; color:rgba(255,255,255,.45); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; text-align:center; padding:6px 4px; border-right:1px solid rgba(255,255,255,.08); border-top:none; border-bottom:none; border-left:none; }
+tr.month-row th.month-label { color:#fff; font-size:10px; letter-spacing:.08em; border-right:1px solid rgba(255,255,255,.12); }
+tr.month-row th.s-tarea  { background:#1a1d2e !important; border-right:none; border-top:none !important; border-bottom:none !important; padding:0; }
+tr.month-row th.s-pct    { background:#1a1d2e !important; border-right:none; border-top:none !important; border-bottom:none !important; padding:0; }
+tr.month-row th.s-avance { background:#1a1d2e !important; border-right:none; border-top:none !important; border-bottom:none !important; padding:0; }
+
+/* WEEK ROW — sticky cells same bg, seamless */
+tr.week-row th { background:#1a1d2e; color:rgba(255,255,255,.6); font-size:9px; font-weight:600; text-align:center; padding:6px 2px; width:var(--col-week); min-width:var(--col-week); border-right:1px solid rgba(255,255,255,.06); border-top:none; border-bottom:2px solid rgba(35,85,232,.3); border-left:none; line-height:1.4; }
+tr.week-row th.s-tarea  { background:#1a1d2e !important; border-right:1px solid rgba(255,255,255,.08); border-top:none !important; border-bottom:2px solid rgba(35,85,232,.3) !important; }
+tr.week-row th.s-pct    { background:#1a1d2e !important; border-right:1px solid rgba(255,255,255,.08); border-top:none !important; border-bottom:2px solid rgba(35,85,232,.3) !important; }
+tr.week-row th.s-avance { background:#1a1d2e !important; border-right:2px solid rgba(35,85,232,.5); border-top:none !important; border-bottom:2px solid rgba(35,85,232,.3) !important; }
+
+/* HITO ROW */
+tr.hito-row td { background:#1e293b; padding:0; border-top:none; border-bottom:1px solid rgba(255,255,255,.05); border-left:none; border-right:none; }
+
+/* TASK ROW */
+tr.task-row td { padding:0; border-top:none; border-bottom:1px solid var(--border); border-left:none; border-right:none; vertical-align:middle; height:38px; }
+tr.task-row td.s-pct { border-bottom:none; }
+tr.task-row:nth-child(odd)  td { background:var(--white); }
+tr.task-row:nth-child(even) td { background:var(--row-alt); }
+tr.task-row:hover td { background:#eef2fd !important; transition:background .15s; }
+
+.cell-tarea  { padding:0 16px 0 16px; font-size:11px; font-weight:500; color:var(--text); white-space:nowrap; }
+.cell-pct    { display:block; font-size:11px; font-weight:700; text-align:center; padding:0 4px; line-height:38px; }
+.cell-pct.pct-done  { color:#059669; }
+.cell-pct.pct-empty { color:#cbd5e1; }
+.cell-avance { display:flex; align-items:center; height:38px; padding:0 10px; }
+.progress-track { flex:1; height:8px; background:#e2e8f0; border-radius:99px; overflow:hidden; }
+.progress-fill  { height:100%; border-radius:99px; min-width:0; }
+
+/* GANTT BAR CELLS */
+td.wk { width:var(--col-week); min-width:var(--col-week); padding:8px 2px; border-right:1px solid rgba(0,0,0,.04); border-top:none; border-bottom:1px solid var(--border); border-left:none; }
+td.wk-bar { padding:7px 1px; }
+td.wk-bar .bar-pill { height:20px; width:100%; border-radius:0; }
+td.bar-start .bar-pill { border-radius:6px 0 0 6px; }
+td.bar-end   .bar-pill { border-radius:0 6px 6px 0; }
+td.bar-start.bar-end .bar-pill { border-radius:6px; }
+
+/* FOOTER */
+.gantt-footer { background:#0f172a; padding:14px 32px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.gantt-footer-text { font-size:11px; font-weight:500; color:rgba(255,255,255,.55); }
+.gantt-footer-text strong { color:rgba(255,255,255,.85); font-weight:600; }
+.esl-logo-footer { font-size:12px; font-weight:700; color:#DC2626; }
+</style>
+</head>
+<body>
+<div class="gantt-card">
+
+  <!-- HEADER -->
+  <div class="gantt-header">
+    <div class="gantt-title">Plan de Trabajo – Fase 1: Migración y Despliegue CIVITAS V2 → V3</div>
+    <div class="gantt-subtitle">CIVITAS &nbsp;·&nbsp; Inicio: 01/06/2026 &nbsp;·&nbsp; Fin estimado: 30/11/2026</div>
+    <div class="gantt-badge-row">
+      <span class="gantt-badge"><span class="dot" style="background:#2355E8"></span>3 Hitos</span>
+      <span class="gantt-badge"><span class="dot" style="background:#94a3b8"></span>13 Tareas</span>
+      <span class="gantt-badge"><span class="dot" style="background:#10b981"></span>26 Semanas</span>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="gantt-legend">
+    <span class="gantt-legend-label">Referencias</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#2355E8"></span>Infraestructura y Migración</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#D97706"></span>Testing y Validación</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#059669"></span>Go-Live y Despliegue</span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="gantt-scroll">
+  <table class="gantt-table">
+    <thead>
+      <tr class="month-row">
+        <th class="s-tarea"></th>
+        <th class="s-pct"></th>
+        <th class="s-avance"></th>
+        <th colspan="5"  class="month-label">JUN 2026</th>
+        <th colspan="4"  class="month-label">JUL 2026</th>
+        <th colspan="5"  class="month-label">AGO 2026</th>
+        <th colspan="4"  class="month-label">SEP 2026</th>
+        <th colspan="4"  class="month-label">OCT 2026</th>
+        <th colspan="4"  class="month-label">NOV 2026</th>
+      </tr>
+      <tr class="week-row">
+        <th class="s-tarea"></th>
+        <th class="s-pct"></th>
+        <th class="s-avance"></th>
+        <th>S1<br>01/06</th><th>S2<br>08/06</th><th>S3<br>15/06</th><th>S4<br>22/06</th><th>S5<br>29/06</th>
+        <th>S6<br>06/07</th><th>S7<br>13/07</th><th>S8<br>20/07</th><th>S9<br>27/07</th>
+        <th>S10<br>03/08</th><th>S11<br>10/08</th><th>S12<br>17/08</th><th>S13<br>24/08</th><th>S14<br>31/08</th>
+        <th>S15<br>07/09</th><th>S16<br>14/09</th><th>S17<br>21/09</th><th>S18<br>28/09</th>
+        <th>S19<br>05/10</th><th>S20<br>12/10</th><th>S21<br>19/10</th><th>S22<br>26/10</th>
+        <th>S23<br>02/11</th><th>S24<br>09/11</th><th>S25<br>16/11</th><th>S26<br>23/11</th>
+      </tr>
+    </thead>
+    <tbody id="gantt-body"></tbody>
+  </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="gantt-footer">
+    <div class="gantt-footer-text">
+      Total estimado: <strong>~232 HH</strong> &nbsp;·&nbsp;
+      <strong>3 Hitos</strong> &nbsp;·&nbsp;
+      <strong>13 Tareas</strong> &nbsp;·&nbsp;
+      <strong>26 Semanas</strong> &nbsp;·&nbsp;
+      Inicio: <strong>01/06/2026</strong> &nbsp;·&nbsp;
+      Fin: <strong>30/11/2026</strong>
+    </div>
+    <div class="esl-logo-footer">Civitas</div>
+  </div>
+
+</div><!-- /gantt-card -->
+
+<script>
+(function(){
+  const TOTAL_WEEKS = 26;
+
+  const HITOS = [
+    {
+      label: "HITO 1 – Infraestructura y Migración",
+      hh: "~90 HH", color: "#2355E8",
+      tasks: [
+        { name: "Despliegue de Servidores Independientes de Laboratorio (Staging/Pre-Producción en AWS)", pct: 75, start: 1,  end: 5  },
+        { name: "Resguardo Crítico de Base de Datos Producción (MongoDB 7.0)",                            pct: 35, start: 1,  end: 5  },
+        { name: "Migración",                                                                               pct: 40, start: 2,  end: 7  },
+        { name: "Relevamiento Operativo, User Journey y Definición de KPIs",                               pct: 25, start: 5,  end: 9  },
+        { name: "Nivelación de Versiones",                                                                 pct: 95, start: 4,  end: 11 },
+        { name: "Traslado y Vinculación de Repositorio de Adjuntos Legales (PDFs)",                       pct: 0,  start: 9,  end: 13 },
+      ]
+    },
+    {
+      label: "HITO 2 – Testing y Validación",
+      hh: "~50 HH", color: "#D97706",
+      tasks: [
+        { name: "Pruebas Funcionales",                                                                                  pct: 0, start: 10, end: 15 },
+        { name: "Ejecución de Scripts de Pruebas Técnicas, Estrés de Datos y Control de Permisos",                     pct: 0, start: 12, end: 17 },
+        { name: "Validación Legal End-to-End y Certificación Final de Usuario (UAT)",                                   pct: 0, start: 16, end: 19 },
+      ]
+    },
+    {
+      label: "HITO 3 – Go-Live y Despliegue",
+      hh: "~20 HH", color: "#059669",
+      tasks: [
+        { name: "Protocolo de Transición Segura y Go-Live",                                  pct: 0, start: 22, end: 24 },
+        { name: "Sustitución de Núcleo a V3, Configuración en AWS y Smoke Testing",          pct: 0, start: 23, end: 25 },
+        { name: "Monitoreo de Carga Real y Estabilización Post-Lanzamiento (Día 1)",         pct: 0, start: 24, end: 26 },
+        { name: "Entrega Producción",                                                         pct: 0, start: 26, end: 26 },
+      ]
+    },
+  ];
+
+  const tbody = document.getElementById('gantt-body');
+  let rowIdx = 0;
+
+  function makeWeekCells(start, end, color) {
+    let html = '';
+    for (let w = 1; w <= TOTAL_WEEKS; w++) {
+      const isBar = w >= start && w <= end;
+      if (isBar) {
+        let cls = 'wk wk-bar';
+        if (w === start) cls += ' bar-start';
+        if (w === end)   cls += ' bar-end';
+        html += `<td class="${cls}"><div class="bar-pill" style="background:${color}"></div></td>`;
+      } else {
+        html += `<td class="wk"></td>`;
+      }
+    }
+    return html;
+  }
+
+  HITOS.forEach((hito, hitoIdx) => {
+    const isFirst = hitoIdx === 0;
+    const pctHead   = isFirst ? `<span style="display:block;font-size:10px;font-weight:600;color:rgba(255,255,255,.55);text-align:center;line-height:36px;letter-spacing:.03em">%</span>` : '';
+    const avanceHead= isFirst ? `<span style="display:block;font-size:10px;font-weight:600;color:rgba(255,255,255,.55);text-align:center;line-height:36px;letter-spacing:.03em;padding:0 10px">AVANCE</span>` : '';
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr class="hito-row">
+        <td class="s-tarea" style="background:#1e293b">
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;">
+            <div style="width:3px;height:18px;border-radius:2px;background:${hito.color};flex-shrink:0"></div>
+            <span style="font-size:12px;font-weight:700;color:#fff;">${hito.label}</span>
+          </div>
+        </td>
+        <td class="s-pct" style="background:#1e293b">${pctHead}</td>
+        <td class="s-avance" style="background:#1e293b">${avanceHead}</td>
+        <td colspan="${TOTAL_WEEKS}" style="background:#1e293b;text-align:right;padding-right:16px">
+          <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.35)">${hito.hh}</span>
+        </td>
+      </tr>`);
+
+    hito.tasks.forEach(task => {
+      rowIdx++;
+      const bg = rowIdx % 2 === 0 ? '#f8faff' : '#ffffff';
+      const pctLabel = task.pct > 0
+        ? `<span class="cell-pct pct-done">${task.pct}%</span>`
+        : `<span class="cell-pct pct-empty">0%</span>`;
+      const barHtml = `<div class="progress-track"><div class="progress-fill" style="width:${task.pct}%;background:${task.pct>0?hito.color:'transparent'}"></div></div>`;
+
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr class="task-row" style="background:${bg}">
+          <td class="s-tarea"  style="background:${bg}"><div class="cell-tarea" title="${task.name}">${task.name}</div></td>
+          <td class="s-pct"    style="background:${bg}">${pctLabel}</td>
+          <td class="s-avance" style="background:${bg}"><div class="cell-avance">${barHtml}</div></td>
+          ${makeWeekCells(task.start, task.end, hito.color)}
+        </tr>`);
+    });
+  });
+})();
+</script>
+</body>
+</html>
